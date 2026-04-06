@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Web Safe Name Generator</title>
+    
+    <link rel="icon" href="image_86.png">
+    <link rel="apple-touch-icon" href="image_86.png">
+
+    <style>
+        :root {
+            --main: #333;
+            --bg: #fff;
+            --accent: #ccc;
+            --input-bg: #fafafa;
+            --radius: 15px;
+            --text-gray: #666;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg);
+            color: var(--main);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 420px;
+            padding: 40px 20px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        h1 { font-size: 1.8rem; font-weight: 800; margin-bottom: 8px; letter-spacing: -1px; }
+        .subtitle { font-size: 0.9rem; color: var(--text-gray); font-weight: 600; margin-bottom: 30px; }
+
+        .input-group { position: relative; text-align: left; margin-bottom: 20px; }
+        .input-label { font-size: 0.85rem; font-weight: 800; color: var(--main); margin-left: 5px; margin-bottom: 8px; display: block; text-transform: uppercase; }
+        
+        textarea {
+            width: 100%;
+            height: 140px;
+            padding: 15px;
+            padding-right: 40px;
+            border: 2px solid var(--accent);
+            border-radius: var(--radius);
+            background: var(--input-bg);
+            font-size: 1rem;
+            font-weight: 600;
+            line-height: 1.5;
+            color: var(--main) !important;
+            box-sizing: border-box;
+            outline: none;
+            resize: none;
+            -webkit-appearance: none;
+            -webkit-text-fill-color: var(--main) !important;
+            opacity: 1 !important;
+        }
+        textarea::placeholder { color: #bbb; -webkit-text-fill-color: #bbb; }
+
+        .clear-btn {
+            position: absolute;
+            right: 12px;
+            top: 38px;
+            background: none;
+            border: none;
+            color: #bbb;
+            font-size: 1.4rem;
+            font-weight: 800;
+            cursor: pointer;
+            padding: 5px;
+            display: none;
+            z-index: 2;
+        }
+        .clear-btn.active { display: block; }
+
+        .main-btn {
+            width: 100%;
+            padding: 18px;
+            background: var(--main);
+            color: #fff;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 1rem;
+            font-weight: 800;
+            cursor: pointer;
+            margin: 10px 0 30px;
+            transition: opacity 0.1s;
+        }
+        .main-btn:active { opacity: 0.8; transform: scale(0.98); }
+
+        .output-area {
+            background: var(--input-bg);
+            border: 2px dashed var(--accent);
+            border-radius: var(--radius);
+            padding: 15px;
+            min-height: 100px;
+            text-align: left;
+            cursor: pointer;
+            position: relative;
+        }
+        .output-area.has-content { border-style: solid; border-color: var(--main); }
+        .output-text {
+            font-size: 0.95rem;
+            font-weight: 700;
+            white-space: pre-wrap;
+            word-break: break-all;
+            color: var(--main);
+        }
+        .copy-hint {
+            font-size: 0.7rem;
+            color: var(--text-gray);
+            font-weight: 700;
+            margin-top: 10px;
+            display: none;
+        }
+        .output-area.has-content + .copy-hint { display: block; }
+
+        #toast {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            background: var(--main); color: #fff;
+            padding: 12px 24px; border-radius: 20px; font-size: 0.9rem; font-weight: 700;
+            opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 1000;
+        }
+
+        footer { margin-top: 60px; font-size: 12px; color: #777; line-height: 1.8; font-weight: 500; }
+        footer a { color: inherit; text-decoration: underline; }
+        .footer-btns { margin-top: 30px; }
+        .kofi-btn {
+            display: inline-block; background: var(--main); color: #fff;
+            padding: 14px 28px; border-radius: var(--radius);
+            text-decoration: none; font-weight: bold; font-size: 15px; margin-bottom: 15px;
+        }
+        .home-btn {
+            display: block; width: 70%; margin: 0 auto; background: var(--accent);
+            color: var(--main); border: none; padding: 12px;
+            border-radius: var(--radius); font-weight: 800; font-size: 14px; cursor: pointer;
+        }
+
+        #modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); align-items: center; justify-content: center; z-index: 100;
+        }
+        .modal-content {
+            background: #fff; width: 85%; max-width: 340px; padding: 35px;
+            border-radius: var(--radius); text-align: left; position: relative;
+        }
+        .close-x { position: absolute; top: 15px; right: 20px; font-size: 24px; color: #888; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div id="toast">Copied!</div>
+
+<div class="container">
+    <h1>Web Safe Name</h1>
+    <p class="subtitle">Clean filenames for a glitch-free web.</p>
+
+    <div class="input-group">
+        <span class="input-label">Raw Names (One per line)</span>
+        <textarea id="nameInput" placeholder="My Photo (1) !.jpg&#10;Crème Brûlée.png" oninput="toggleClearBtn()"></textarea>
+        <button class="clear-btn" id="clr-btn" onclick="clearInput()">×</button>
+    </div>
+
+    <button class="main-btn" onclick="processNames()">Generate Web Safe Names</button>
+
+    <div class="input-group">
+        <span class="input-label">Result</span>
+        <div class="output-area" id="outputContainer" onclick="copyOutput()">
+            <div class="output-text" id="outputText">...</div>
+        </div>
+        <p class="copy-hint">Tap area to copy results</p>
+    </div>
+
+    <div class="footer-btns">
+        <a href="https://ko-fi.com/afrorakda" target="_blank" class="kofi-btn">☕️buy me a coffee</a>
+        <button class="home-btn" onclick="showModal()">Add to Home Screen</button>
+    </div>
+
+    <footer>
+        <div>No login / No tracking / No ads / Browser only</div>
+        <div><a href="https://afrorakda.com/privacy/">Privacy Policy</a> / afrorakda © 2026</div>
+    </footer>
+</div>
+
+<div id="modal" onclick="hideModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <span class="close-x" onclick="hideModal()">×</span>
+        <h3>📱 Install</h3>
+        <p>Add to your home screen.</p>
+        <p>🍏 <strong>iPhone (Safari):</strong><br>Tap Share, then Add to Home Screen.</p>
+        <p>🤖 <strong>Android (Chrome):</strong><br>Tap Menu (⋮), then Add to Home Screen.</p>
+    </div>
+</div>
+
+<script>
+    const nameInput = document.getElementById('nameInput');
+    const clrBtn = document.getElementById('clr-btn');
+    const outputContainer = document.getElementById('outputContainer');
+    const outputText = document.getElementById('outputText');
+    const toast = document.getElementById('toast');
+
+    function toggleClearBtn() {
+        clrBtn.classList.toggle('active', nameInput.value.length > 0);
+    }
+
+    function clearInput() {
+        nameInput.value = '';
+        outputText.innerText = '...';
+        outputContainer.classList.remove('has-content');
+        toggleClearBtn();
+        nameInput.focus();
+    }
+
+    function processNames() {
+        const input = nameInput.value.trim();
+        if (!input) return;
+
+        const lines = input.split('\n');
+        const processed = lines.map(line => sanitize(line));
+        
+        outputText.innerText = processed.join('\n');
+        outputContainer.classList.add('has-content');
+    }
+
+    function sanitize(str) {
+        // 1. De-accent (Latin symbols to plain English)
+        str = str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+        // 2. Lowercase
+        str = str.toLowerCase();
+
+        // 3. Separate extension to protect the last dot
+        const lastDotIndex = str.lastIndexOf('.');
+        let name = str;
+        let ext = '';
+        
+        if (lastDotIndex > 0) {
+            name = str.substring(0, lastDotIndex);
+            ext = str.substring(lastDotIndex); // includes the dot
+        }
+
+        // 4. Replace non-alphanumeric (except hyphens in name) with hyphen
+        // This effectively removes Japanese characters and special symbols
+        name = name.replace(/[^a-z0-9]/g, '-');
+        
+        // 5. Clean up multiple hyphens and trim
+        name = name.replace(/-+/g, '-').replace(/^-|-$/g, '');
+
+        // 6. Basic sanitization for extension (just in case)
+        ext = ext.replace(/[^a-z0-9.]/g, '');
+
+        return name + ext;
+    }
+
+    async function copyOutput() {
+        const text = outputText.innerText;
+        if (text === '...') return;
+        
+        try {
+            await navigator.clipboard.writeText(text);
+            toast.style.opacity = '1';
+            setTimeout(() => toast.style.opacity = '0', 1500);
+        } catch (err) {}
+    }
+
+    function showModal() { document.getElementById('modal').style.display = 'flex'; }
+    function hideModal() { document.getElementById('modal').style.display = 'none'; }
+</script>
+
+</body>
+</html>
