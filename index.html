@@ -99,11 +99,12 @@
             background: var(--input-bg);
             border: 2px dashed var(--accent);
             border-radius: var(--radius);
-            padding: 15px;
+            padding: 20px;
             min-height: 100px;
             text-align: left;
             cursor: pointer;
             position: relative;
+            box-sizing: border-box;
         }
         .output-area.has-content { border-style: solid; border-color: var(--main); }
         .output-text {
@@ -230,30 +231,34 @@
     }
 
     function sanitize(str) {
-        // 1. De-accent (Latin symbols to plain English)
+        if (!str.trim()) return "";
+
+        // 1. De-accent
         str = str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
         // 2. Lowercase
         str = str.toLowerCase();
 
-        // 3. Separate extension to protect the last dot
+        // 3. Separate extension
         const lastDotIndex = str.lastIndexOf('.');
         let name = str;
         let ext = '';
         
         if (lastDotIndex > 0) {
             name = str.substring(0, lastDotIndex);
-            ext = str.substring(lastDotIndex); // includes the dot
+            ext = str.substring(lastDotIndex);
         }
 
-        // 4. Replace non-alphanumeric (except hyphens in name) with hyphen
-        // This effectively removes Japanese characters and special symbols
+        // 4. Sanitize name part
         name = name.replace(/[^a-z0-9]/g, '-');
-        
-        // 5. Clean up multiple hyphens and trim
         name = name.replace(/-+/g, '-').replace(/^-|-$/g, '');
 
-        // 6. Basic sanitization for extension (just in case)
+        // 5. Fallback if name becomes empty after stripping non-alphanumeric chars
+        if (!name) {
+            name = "filename";
+        }
+
+        // 6. Sanitize extension part
         ext = ext.replace(/[^a-z0-9.]/g, '');
 
         return name + ext;
